@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: helpdesk-api
+
+  datasource:
+    url: jdbc:h2:mem:helpdeskdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+server:
+  port: 8080
+
+# Configuración propia de JWT.
+# IMPORTANTE: en un entorno real, "secret" debe salir de una variable de entorno,
+# nunca quedar escrito en el repositorio. Aquí se deja explícito solo para el taller.
+app:
+  jwt:
+    secret: "CAMBIA_ESTA_CLAVE_POR_UNA_PROPIA_DE_AL_MENOS_256_BITS_SENA_2026"
+    access-token-expiration-ms: 900000     # 15 minutos
+    refresh-token-expiration-ms: 604800000 # 7 días
