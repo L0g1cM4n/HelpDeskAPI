@@ -15,10 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Entidad Usuario. Implementa UserDetails para que Spring Security
- * pueda usarla directamente en el proceso de autenticación.
- */
 @Entity
 @Table(name = "usuarios")
 @Getter
@@ -41,7 +37,6 @@ public class Usuario implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
-    // Se almacena cifrada con BCrypt, nunca en texto plano
     @NotBlank
     @Column(nullable = false)
     private String password;
@@ -50,17 +45,13 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private Rol rol;
 
-    // ---- Métodos requeridos por UserDetails ----
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Se antepone "ROLE_" porque así lo espera hasRole() de Spring Security
         return List.of(new SimpleGrantedAuthority("ROLE_" + rol.name()));
     }
 
     @Override
     public String getUsername() {
-        // El "username" de Spring Security es el email
         return email;
     }
 

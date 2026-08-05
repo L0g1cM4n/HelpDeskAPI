@@ -17,5 +17,5 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     // Tickets vencidos: superaron su SLA y no están resueltos
     @Query("SELECT t FROM Ticket t WHERE t.slaVenceEn < :ahora AND t.estado <> :estadoResuelto")
     List<Ticket> findVencidos(@Param("ahora") LocalDateTime ahora,
-                               @Param("estadoResuelto") EstadoTicket estadoResuelto);
+        @Param("estadoResuelto") EstadoTicket estadoResuelto);
 }

@@ -13,13 +13,36 @@ Completado hasta ahora:
 - [x] Modelo de datos: `Usuario`, `Ticket`, `RefreshToken` + enums (`Rol`, `Prioridad`, `EstadoTicket`)
 - [x] Repositorios Spring Data JPA
 - [x] Configuración de base de datos H2 en memoria
-- [ ] Seguridad con Spring Security + filtro JWT
-- [ ] Endpoints de autenticación (`/api/auth/registro`, `/login`, `/refresh`, `/logout`)
+- [x] Seguridad con Spring Security + filtro JWT (access token + refresh token)
+- [x] Endpoints de autenticación (`/api/auth/registro`, `/login`, `/refresh`, `/logout`, `/api/ping`)
+- [x] Manejo global de excepciones (400/401/403/404/409)
 - [ ] Endpoints de tickets con reglas de negocio (cálculo de SLA, vencidos)
-- [ ] Autorización por rol en los endpoints protegidos
-- [ ] Manejo global de excepciones y validaciones
+- [ ] Autorización por rol en los endpoints de tickets
 - [ ] Colección Postman / Swagger
 - [ ] Video de evidencia
+
+## Endpoints de autenticación disponibles
+
+| Método | Ruta                | Auth requerida | Descripción                                  |
+|--------|---------------------|-----------------|-----------------------------------------------|
+| GET    | `/api/ping`          | No              | Responde `{"mensaje":"pong"}`                 |
+| POST   | `/api/auth/registro` | No              | Registra un usuario con rol `USUARIO`         |
+| POST   | `/api/auth/login`    | No              | Devuelve `accessToken` + `refreshToken`       |
+| POST   | `/api/auth/refresh`  | No (usa refreshToken en el body) | Devuelve un nuevo `accessToken` |
+| POST   | `/api/auth/logout`   | Sí (Bearer accessToken) | Revoca el `refreshToken` enviado en el body |
+
+Body de `/api/auth/registro`:
+```json
+{ "nombre": "Ana", "email": "ana@correo.com", "password": "123456" }
+```
+Body de `/api/auth/login`:
+```json
+{ "email": "ana@correo.com", "password": "123456" }
+```
+Body de `/api/auth/refresh` y `/api/auth/logout`:
+```json
+{ "refreshToken": "eyJhbGciOi..." }
+```
 
 ## Stack tecnológico
 
@@ -73,5 +96,6 @@ estado no es `RESUELTO`.
 
 ## Próximos pasos
 
-Seguridad (Spring Security + filtro JWT), servicios de autenticación,
-controladores de tickets y auth, y manejo de excepciones.
+Controlador y servicio de `Ticket` (creación con cálculo de SLA, "mis
+tickets", listado general por rol, cambio de estado, listado de vencidos),
+y la colección de Postman/Swagger con la evidencia en video.
