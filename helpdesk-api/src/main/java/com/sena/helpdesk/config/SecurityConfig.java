@@ -6,6 +6,7 @@ import com.sena.helpdesk.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -49,9 +50,9 @@ public class SecurityConfig {
 
                         // 7.3 Rutas protegidas por rol específico
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("GET", "/api/tickets").hasAnyRole("SOPORTE", "ADMIN")
-                        .requestMatchers("GET", "/api/tickets/vencidos").hasAnyRole("SOPORTE", "ADMIN")
-                        .requestMatchers("PATCH", "/api/tickets/*/estado").hasAnyRole("SOPORTE", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/tickets").hasAnyRole("SOPORTE", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/vencidos").hasAnyRole("SOPORTE", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/tickets/*/estado").hasAnyRole("SOPORTE", "ADMIN")
 
                         // 7.2 Cualquier otra ruta bajo /api requiere estar autenticado
                         .requestMatchers("/api/**").authenticated()
