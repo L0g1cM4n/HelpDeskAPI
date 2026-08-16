@@ -52,10 +52,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String email = jwtService.extraerEmail(token);
+            String tipo = jwtService.extraerTipo(token);
 
             boolean noHayAutenticacionAun = SecurityContextHolder.getContext().getAuthentication() == null;
 
-            if (email != null && noHayAutenticacionAun) {
+            // Solo un access token autentica: el refresh token debe rechazarse aquí
+            // para que no sirva para acceder a rutas protegidas (requisito 8.8).
+            if (email != null && "access".equals(tipo) && noHayAutenticacionAun) {
                 UserDetails usuario = userDetailsService.loadUserByUsername(email);
 
                 if (jwtService.esTokenValido(token, usuario.getUsername())) {

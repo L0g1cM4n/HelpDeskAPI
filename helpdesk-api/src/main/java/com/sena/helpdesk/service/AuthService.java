@@ -1,6 +1,7 @@
 package com.sena.helpdesk.service;
 
 import com.sena.helpdesk.dto.*;
+import com.sena.helpdesk.exception.AccesoDenegadoException;
 import com.sena.helpdesk.exception.EmailYaRegistradoException;
 import com.sena.helpdesk.exception.RefreshTokenInvalidoException;
 import com.sena.helpdesk.model.RefreshToken;
@@ -11,6 +12,7 @@ import com.sena.helpdesk.repository.UsuarioRepository;
 import com.sena.helpdesk.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -55,7 +57,7 @@ public class AuthService {
         );
 
         Usuario usuario = usuarioRepository.findByEmail(request.email())
-                .orElseThrow(() -> new RefreshTokenInvalidoException("Credenciales inválidas"));
+                .orElseThrow(() -> new BadCredentialsException("Email o contraseña incorrectos"));
 
         return generarParDeTokens(usuario);
     }
@@ -84,6 +86,11 @@ public class AuthService {
     public void logout(String emailUsuarioAutenticado, RefreshRequest request) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(request.refreshToken())
                 .orElseThrow(() -> new RefreshTokenInvalidoException("El refreshToken no existe"));
+
+        // Un usuario solo puede revocar sus propios tokens de sesión
+        if (!refreshToken.getUsuario().getEmail().equals(emailUsuarioAutenticado)) {
+            throw new AccesoDenegadoException("No puede revocar un refreshToken que no le pertenece");
+        }
 
         refreshToken.setRevocado(true);
         refreshTokenRepository.save(refreshToken);

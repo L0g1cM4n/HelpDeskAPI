@@ -73,6 +73,15 @@ public class JwtService {
         return extraerClaim(token, Claims::getSubject);
     }
 
+    /**
+     * Devuelve el claim "tipo" (access/refresh). El filtro de autenticación
+     * exige tipo == "access": un refresh token NO debe servir para acceder
+     * a rutas protegidas (punto 8.8 del documento del taller).
+     */
+    public String extraerTipo(String token) {
+        return extraerClaim(token, claims -> claims.get("tipo", String.class));
+    }
+
     public boolean esTokenValido(String token, String emailEsperado) {
         try {
             String email = extraerEmail(token);
