@@ -1,0 +1,1195 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-4a7b-8c9d-helpdesk2026",
+		"name": "HelpDesk API - Taller SLA",
+		"description": "Colección para probar todos los endpoints de la API de Mesa de Ayuda.\n\n## Cómo usar\n\n1. Levantar la API: `mvn spring-boot:run`\n2. Ejecutar los requests **en orden** (individualmente o con Collection Runner).\n3. Los tokens se capturan automáticamente en las variables de la colección tras registro/login.\n\n## Flujo cubierto\n\n- Rutas públicas (ping, registro, login, refresh)\n- Validaciones (400), email duplicado (409)\n- Tickets con SLA calculado por el servidor\n- Seguridad: 401 sin token, refresh token no sirve como access token\n- RBAC: 403 para rol USUARIO en rutas de SOPORTE/ADMIN\n- Admin: ascenso a SOPORTE, listado general, vencidos, cambio de estado\n- Logout que revoca el refresh token (refresh posterior falla con 401)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Autenticación (públicas)",
+			"item": [
+				{
+					"name": "01 Ping",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"La API está viva\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ping",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "ping"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "02 Registro usuario (Ana)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Registro exitoso devuelve 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"const j = pm.response.json();",
+									"pm.test(\"Devuelve ambos tokens\", function () {",
+									"    pm.expect(j.accessToken).to.be.a('string');",
+									"    pm.expect(j.refreshToken).to.be.a('string');",
+									"});",
+									"pm.collectionVariables.set(\"accessTokenUsuario\", j.accessToken);",
+									"pm.collectionVariables.set(\"refreshTokenUsuario\", j.refreshToken);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Ana\",\n  \"email\": \"ana@correo.com\",\n  \"password\": \"123456\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/registro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "registro"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "03 Registro email duplicado (409)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Email ya registrado responde 409\", function () {",
+									"    pm.response.to.have.status(409);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Ana Otra Vez\",\n  \"email\": \"ana@correo.com\",\n  \"password\": \"123456\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/registro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "registro"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "04 Registro password corta (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Password menor a 6 caracteres responde 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Mala Clave\",\n  \"email\": \"mala@correo.com\",\n  \"password\": \"123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/registro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "registro"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "05 Registro segundo usuario (Carlos)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Registro exitoso devuelve 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Carlos Soporte\",\n  \"email\": \"carlos@correo.com\",\n  \"password\": \"123456\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/registro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "registro"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "06 Login Ana",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Login exitoso devuelve 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const j = pm.response.json();",
+									"pm.collectionVariables.set(\"accessTokenUsuario\", j.accessToken);",
+									"pm.collectionVariables.set(\"refreshTokenUsuario\", j.refreshToken);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"ana@correo.com\",\n  \"password\": \"123456\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "07 Login credenciales incorrectas (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Contraseña incorrecta responde 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"ana@correo.com\",\n  \"password\": \"claveequivocada\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "08 Refresh válido",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Refresh exitoso devuelve 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const j = pm.response.json();",
+									"pm.collectionVariables.set(\"accessTokenUsuario\", j.accessToken);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshTokenUsuario}}\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/refresh",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "refresh"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "09 Logout (revoca refresh)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Logout exitoso devuelve 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshTokenUsuario}}\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "logout"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "10 Refresh tras logout (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"El refresh token revocado responde 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshTokenUsuario}}\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/refresh",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "refresh"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "11 Login Ana (re-login tras logout)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Login exitoso devuelve 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const j = pm.response.json();",
+									"pm.collectionVariables.set(\"accessTokenUsuario\", j.accessToken);",
+									"pm.collectionVariables.set(\"refreshTokenUsuario\", j.refreshToken);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"ana@correo.com\",\n  \"password\": \"123456\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Tickets (usuario autenticado)",
+			"item": [
+				{
+					"name": "12 Crear ticket ALTA (SLA 4h)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Creación exitosa devuelve 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"const j = pm.response.json();",
+									"pm.collectionVariables.set(\"ticketIdAna\", j.id);",
+									"pm.test(\"El servidor definió estado ABIERTO\", function () {",
+									"    pm.expect(j.estado).to.eql(\"ABIERTO\");",
+									"});",
+									"pm.test(\"El SLA quedó calculado y no vencido\", function () {",
+									"    pm.expect(j.slaVenceEn).to.exist;",
+									"    pm.expect(j.vencido).to.eql(false);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"No enciende\",\n  \"descripcion\": \"El equipo no prende\",\n  \"prioridad\": \"ALTA\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "13 Crear ticket BAJA (SLA 72h)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Creación exitosa devuelve 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"Lentitud\",\n  \"descripcion\": \"Va muy lento\",\n  \"prioridad\": \"BAJA\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "14 Crear sin descripción (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Descripción vacía responde 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"X\",\n  \"descripcion\": \"\",\n  \"prioridad\": \"MEDIA\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "15 Crear prioridad inválida (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Prioridad fuera del enum responde 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"X\",\n  \"descripcion\": \"Y\",\n  \"prioridad\": \"URGENTE\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "16 Mis tickets",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Listado propio devuelve 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Devuelve un arreglo\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an(\"array\");",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/mios",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "mios"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "17 Mi ticket por id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"El dueño consulta su ticket\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/{{ticketIdAna}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "{{ticketIdAna}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "18 Ticket inexistente (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Ticket inexistente responde 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/99999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "99999"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Seguridad (401) y RBAC (403)",
+			"item": [
+				{
+					"name": "19 Ruta protegida sin token (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Sin token responde 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/mios",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "mios"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "20 Token inválido (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Token corrupto responde 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer esto.no.es.un.token" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/mios",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "mios"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "21 RefreshToken usado como AccessToken (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Un refresh token NO sirve para rutas protegidas\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{refreshTokenUsuario}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/mios",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "mios"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "22 USUARIO lista todos los tickets (403)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Rol insuficiente responde 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "23 USUARIO cambia estado (403)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Rol insuficiente responde 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"estado\": \"EN_PROCESO\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/{{ticketIdAna}}/estado",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "{{ticketIdAna}}", "estado"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "24 USUARIO lista vencidos (403)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Rol insuficiente responde 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/vencidos",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "vencidos"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "25 USUARIO promueve a SOPORTE (403)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Solo ADMIN puede ascender usuarios\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"carlos@correo.com\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/soporte",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "soporte"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Admin y SOPORTE",
+			"item": [
+				{
+					"name": "26 Login admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Login admin devuelve 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const j = pm.response.json();",
+									"pm.collectionVariables.set(\"accessTokenAdmin\", j.accessToken);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@correo.com\",\n  \"password\": \"admin123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "27 ADMIN promueve a Carlos SOPORTE",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Ascenso exitoso devuelve 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"El rol quedó en SOPORTE\", function () {",
+									"    pm.expect(pm.response.json().rol).to.eql(\"SOPORTE\");",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenAdmin}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"carlos@correo.com\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/soporte",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "soporte"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "28 ADMIN promueve email inexistente (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Usuario inexistente responde 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenAdmin}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"nadie@correo.com\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/soporte",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "soporte"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "29 Login Carlos (ya SOPORTE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Login exitoso devuelve 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const j = pm.response.json();",
+									"pm.collectionVariables.set(\"accessTokenSoporte\", j.accessToken);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"carlos@correo.com\",\n  \"password\": \"123456\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "30 SOPORTE crea ticket MEDIA",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Creación exitosa devuelve 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"pm.collectionVariables.set(\"ticketIdCarlos\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenSoporte}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"Servidor caído\",\n  \"descripcion\": \"Revisar servidor de correo\",\n  \"prioridad\": \"MEDIA\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "31 SOPORTE lista todos los tickets",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Listado general devuelve 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenSoporte}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "32 SOPORTE lista vencidos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Listado de vencidos devuelve 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenSoporte}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/vencidos",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "vencidos"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "33 SOPORTE cambia estado a EN_PROCESO",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Cambio de estado devuelve 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"El estado cambió\", function () {",
+									"    pm.expect(pm.response.json().estado).to.eql(\"EN_PROCESO\");",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenSoporte}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"estado\": \"EN_PROCESO\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/{{ticketIdCarlos}}/estado",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "{{ticketIdCarlos}}", "estado"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "34 SOPORTE ve ticket ajeno (de Ana)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"SOPORTE puede consultar cualquier ticket\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenSoporte}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/{{ticketIdAna}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "{{ticketIdAna}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "35 USUARIO ve ticket ajeno (403)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Un USUARIO no puede ver tickets ajenos\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessTokenUsuario}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/{{ticketIdCarlos}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tickets", "{{ticketIdCarlos}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "accessTokenUsuario",
+			"value": ""
+		},
+		{
+			"key": "refreshTokenUsuario",
+			"value": ""
+		},
+		{
+			"key": "accessTokenAdmin",
+			"value": ""
+		},
+		{
+			"key": "accessTokenSoporte",
+			"value": ""
+		},
+		{
+			"key": "ticketIdAna",
+			"value": ""
+		},
+		{
+			"key": "ticketIdCarlos",
+			"value": ""
+		}
+	]
+}

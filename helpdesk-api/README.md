@@ -16,7 +16,7 @@ automático de SLA según la prioridad del ticket.
 - [x] Endpoints de tickets con reglas de negocio (cálculo de SLA, tickets vencidos)
 - [x] Endpoint de administración (`POST /api/admin/soporte`)
 - [x] Manejo global de excepciones (400/401/403/404/409)
-- [ ] Colección Postman / Swagger (pendiente)
+- [x] Colección Postman con pruebas de todos los endpoints (`postman/HelpDeskAPI.postman_collection.json`)
 - [ ] Video de evidencia (pendiente)
 
 ## Stack tecnológico
@@ -198,7 +198,28 @@ no es `RESUELTO`. Cada respuesta de ticket incluye el campo `vencido`.
 | Recurso no encontrado                       | 404    |
 | Email ya registrado                         | 409    |
 
+## Colección Postman
+
+El archivo [`postman/HelpDeskAPI.postman_collection.json`](postman/HelpDeskAPI.postman_collection.json)
+cubre los 35 escenarios de prueba (los 13 endpoints + casos de error esperados).
+
+### Cómo importarla y usarla
+
+1. Levanta la API: `mvn spring-boot:run`.
+2. En Postman: **Import** → selecciona `postman/HelpDeskAPI.postman_collection.json`.
+3. Ejecuta los requests **en orden numérico** (01, 02, 03...) o con **Collection Runner**
+   sobre toda la colección.
+
+Los tokens se capturan automáticamente en variables de la colección tras
+registro/login/refresh, y cada request incluye assertions (`Tests`) que verifican
+el código HTTP esperado (200/201/204/400/401/403/404/409), por lo que al correrla
+con Collection Runner se ve el resultado verde/rojo de cada verificación.
+
+> Nota: para que `/api/tickets/vencidos` muestre tickets, debe existir al menos
+> un ticket cuyo `slaVenceEn` esté en el pasado. Como la BD es en memoria, se
+> puede simular desde la consola H2 (`http://localhost:8080/h2-console`) con:
+> `UPDATE tickets SET sla_vence_en = DATEADD('HOUR', -5, CURRENT_TIMESTAMP);`
+
 ## Pendiente
 
-- Colección Postman / Swagger para probar todos los endpoints.
 - Video de evidencia (registro/login, refresh, logout, 401/403, SLA y vencidos).
