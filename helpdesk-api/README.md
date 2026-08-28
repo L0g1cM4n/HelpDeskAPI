@@ -17,7 +17,7 @@ automático de SLA según la prioridad del ticket.
 - [x] Endpoint de administración (`POST /api/admin/soporte`)
 - [x] Manejo global de excepciones (400/401/403/404/409)
 - [x] Colección Postman con pruebas de todos los endpoints (`postman/HelpDeskAPI.postman_collection.json`)
-- [ ] Video de evidencia (pendiente)
+- [x] Video de evidencia demostrando todos los flujos requeridos
 
 ## Stack tecnológico
 
@@ -219,7 +219,3 @@ con Collection Runner se ve el resultado verde/rojo de cada verificación.
 > un ticket cuyo `slaVenceEn` esté en el pasado. Como la BD es en memoria, se
 > puede simular desde la consola H2 (`http://localhost:8080/h2-console`) con:
 > `UPDATE tickets SET sla_vence_en = DATEADD('HOUR', -5, CURRENT_TIMESTAMP);`
-
-## Pendiente
-
-- Video de evidencia (registro/login, refresh, logout, 401/403, SLA y vencidos).
