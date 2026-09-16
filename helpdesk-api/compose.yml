@@ -1,0 +1,12 @@
+services:
+  api:
+    image: l0g1cm4n/helpdeskapi
+    ports:
+      - "3000:8080"
+    env_file:
+      - .env
+    #  environment:
+    #    - DATABASE_URL=jdbc:h2:mem:helpdeskdb
+    #    - DATABASE_USER=sa
+    #    - DATABASE_PASSWORD=
+    #    - JWT_SECRET=f8a3c9e21b7d5e4a0f6c8b9a2e1d3c4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d
